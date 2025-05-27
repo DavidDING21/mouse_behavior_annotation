@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Mouse Behavior Annotation System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        .segment-selector {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+        }
+        .video-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .video-container {
+            flex: 1;
+            min-width: 320px;
+            background-color: #eee;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        video {
+            width: 100%;
+            border-radius: 3px;
+        }
+        .annotation-form {
+            background-color: #f0f8ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"], input[type="number"], select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .progress-info {
+            margin-top: 20px;
+            text-align: center;
+            color: #666;
+        }
+        .error-message {
+            padding: 15px;
+            background-color: #ffdddd;
+            color: #f44336;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            width: 100%;
+        }
+        .behavior-description {
+            background-color: #f9f9f9;
+            padding: 10px;
+            border-left: 3px solid #ccc;
+            margin-top: 5px;
+            font-size: 0.9em;
+        }
+        .mouse-annotation {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+        }
+        .social-behavior {
+            background-color: #e6f7ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Mouse Behavior Annotation System</h1>
+        
+        <div class="segment-selector">
+            <h2>Select Video Segment</h2>
+            <select id="segment-select">
+                <option value="">-- Please select a video segment --</option>
+            </select>
+            <button id="load-segment-btn">Load Segment</button>
+            <div class="progress-info">
+                Annotated: <span id="annotated-count">0</span> / <span id="total-count">0</span> segments
+            </div>
+        </div>
+        
+        <div id="segment-view" style="display: none;">
+            <h2>Segment Info: <span id="segment-info"></span></h2>
+            
+            <div class="video-section" id="video-section">
+                <!-- Videos will be loaded here -->
+            </div>
+            
+            <div class="annotation-form">
+                <h3>Behavior Annotation</h3>
+                
+                <!-- Social behavior section -->
+                <div class="social-behavior">
+                    <div class="form-group">
+                        <label>Is this a social interaction?</label>
+                        <div>
+                            <label style="display: inline;">
+                                <input type="radio" name="interaction" value="1"> Yes
+                            </label>
+                            <label style="display: inline; margin-left: 20px;">
+                                <input type="radio" name="interaction" value="0"> No
+                            </label>
+                        </div>
+                        <div class="confidence-slider" style="margin-top: 10px;">
+                            <label for="interaction-confidence">Confidence (0-1):</label>
+                            <input type="range" id="interaction-confidence" min="0" max="1" step="0.01" value="0.8">
+                            <span id="interaction-confidence-value">0.8</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Focal mouse annotation -->
+                <div class="mouse-annotation">
+                    <h4>Focal Mouse BLUE (<span id="focal-rat-id">-</span>)</h4>
+                    <div class="form-group">
+                        <label for="focal-behavior-type">Behavior:</label>
+                        <select id="focal-behavior-type">
+                            <option value="">-- Select behavior --</option>
+                            <optgroup label="Maintenance">
+                                <option value="Grooming">Grooming</option>
+                                <option value="Drinking">Drinking</option>
+                                <option value="Feeding">Feeding</option>
+                            </optgroup>
+                            <optgroup label="Exploratory">
+                                <option value="Search">Search</option>
+                                <option value="Attend">Attend</option>
+                                <option value="Approach">Approach</option>
+                                <option value="Investigate Sniffing">Investigate Sniffing</option>
+                                <option value="Investigate Whisking">Investigate Whisking</option>
+                            </optgroup>
+                            <optgroup label="Affiliative">
+                                <option value="Group Sleeping">Group Sleeping</option>
+                                <option value="Allo-grooming">Allo-grooming</option>
+                            </optgroup>
+                            <optgroup label="Agonistic">
+                                <option value="Threat">Threat</option>
+                                <option value="Aggressive Fighting">Aggressive Fighting</option>
+                                <option value="Aggressive Bite">Aggressive Bite</option>
+                                <option value="Fleeing & Chase">Fleeing & Chase</option>
+                                <option value="Submissive">Submissive</option>
+                            </optgroup>
+                            <optgroup label="Abnormal">
+                                <option value="Circling">Circling</option>
+                                <option value="Jumping">Jumping</option>
+                            </optgroup>
+                        </select>
+                        <div id="focal-behavior-description" class="behavior-description">
+                            Select a behavior to see its description
+                        </div>
+                        <div class="confidence-slider" style="margin-top: 10px;">
+                            <label for="focal-confidence">Confidence (0-1):</label>
+                            <input type="range" id="focal-confidence" min="0" max="1" step="0.01" value="0.8">
+                            <span id="focal-confidence-value">0.8</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Partner mouse annotation -->
+                <div class="mouse-annotation">
+                    <h4>Partner Mouse RED (<span id="partner-rat-id"></span>)</h4>
+                    <div class="form-group">
+                        <label for="partner-behavior-type">Behavior:</label>
+                        <select id="partner-behavior-type">
+                            <option value="">-- Select behavior --</option>
+                            <optgroup label="Maintenance">
+                                <option value="Grooming">Grooming</option>
+                                <option value="Drinking">Drinking</option>
+                                <option value="Feeding">Feeding</option>
+                            </optgroup>
+                            <optgroup label="Exploratory">
+                                <option value="Search">Search</option>
+                                <option value="Attend">Attend</option>
+                                <option value="Approach">Approach</option>
+                                <option value="Investigate Sniffing">Investigate Sniffing</option>
+                                <option value="Investigate Whisking">Investigate Whisking</option>
+                            </optgroup>
+                            <optgroup label="Affiliative">
+                                <option value="Group Sleeping">Group Sleeping</option>
+                                <option value="Allo-grooming">Allo-grooming</option>
+                            </optgroup>
+                            <optgroup label="Agonistic">
+                                <option value="Threat">Threat</option>
+                                <option value="Aggressive Fighting">Aggressive Fighting</option>
+                                <option value="Aggressive Bite">Aggressive Bite</option>
+                                <option value="Fleeing & Chase">Fleeing & Chase</option>
+                                <option value="Submissive">Submissive</option>
+                            </optgroup>
+                            <optgroup label="Abnormal">
+                                <option value="Circling">Circling</option>
+                                <option value="Jumping">Jumping</option>
+                            </optgroup>
+                        </select>
+                        <div id="partner-behavior-description" class="behavior-description">
+                            Select a behavior to see its description
+                        </div>
+                        <div class="confidence-slider" style="margin-top: 10px;">
+                            <label for="partner-confidence">Confidence (0-1):</label>
+                            <input type="range" id="partner-confidence" min="0" max="1" step="0.01" value="0.8">
+                            <span id="partner-confidence-value">0.8</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <button id="save-btn">Save Annotation</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Behavior descriptions
+        const behaviorDescriptions = {
+            "Grooming": "Mouse licks its fur, grooms with forepaws, or scratches with any limb, usually while sitting.",
+            "Drinking": "Mouse rears up and licks the nozzle of the water dispenser.",
+            "Feeding": "Mouse rears up to gnaw at food, often using forepaws to hold food steady.",
+            "Search": "General locomotive behavior not categorized as fleeing or approach. Like rearing, sniffing without a specific target, or moving around the environment.",
+            "Attend": "Mouse directs attention toward a stimulus from a distance, pausing locomotion with eyes and ears fixed on the stimulus.",
+            "Approach": "Mouse moves directly toward a stimulus or object of interest.",
+            "Investigate Sniffing": "Rapid nose twitching either in contact with stimulus or with nose held in air.",
+            "Investigate Whisking": "Mouse brushes whiskers rapidly along the surface of a stimulus.",
+            "Group Sleeping": "Mouse sleeps in close proximity to another mouse.",
+            "Allo-grooming": "Mouse grooms another mouse, typically licking or nibbling at the fur.",
+            "Aggressive Fighting": "Violent interaction with mice locked together, rolling, kicking, biting and wrestling.",
+            "Aggressive Bite": "Mouse grips another's skin with teeth and pulls head back sharply, typically directed at tail or rump.",
+            "Fleeing & Chase": "One mouse pursues another that is actively running away, without biting.",
+            "Circling": "Mouse traces a repetitive circular path, possibly changing body orientation or direction.",
+            "Jumping": "Multiple repetitive jumps (stereotypy is indicated by >20 jumps per minute).",
+            "Threat": "Mounting or Thrusting behavior, where one mouse mounts another without engaging in aggressive fighting.",
+            "Submissive": "Mouse displays submissive behavior, such as crouching or avoiding confrontation.",
+        };
+
+        // Global variables
+        let segments = [];
+        let annotations = {};
+        let currentSegment = null;
+        
+        // Load data when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get all segment data
+            fetch('/get_segments')
+                .then(response => response.json())
+                .then(data => {
+                    segments = data;
+                    document.getElementById('total-count').textContent = segments.length;
+                    populateSegmentSelect();
+                });
+            
+            // Get existing annotations
+            fetch('/get_annotations')
+                .then(response => response.json())
+                .then(data => {
+                    annotations = data;
+                    document.getElementById('annotated-count').textContent = Object.keys(annotations).length;
+                    updateSegmentSelectLabels();
+                });
+            
+            // Event listeners
+            document.getElementById('load-segment-btn').addEventListener('click', loadSelectedSegment);
+            document.getElementById('save-btn').addEventListener('click', saveAnnotation);
+            document.getElementById('interaction-confidence').addEventListener('input', function() {
+                updateConfidenceValue('interaction-confidence', 'interaction-confidence-value');
+            });
+            document.getElementById('focal-confidence').addEventListener('input', function() {
+                updateConfidenceValue('focal-confidence', 'focal-confidence-value');
+            });
+            document.getElementById('partner-confidence').addEventListener('input', function() {
+                updateConfidenceValue('partner-confidence', 'partner-confidence-value');
+            });
+            
+            // Behavior description updates
+            document.getElementById('focal-behavior-type').addEventListener('change', function() {
+                updateBehaviorDescription('focal-behavior-type', 'focal-behavior-description');
+            });
+            document.getElementById('partner-behavior-type').addEventListener('change', function() {
+                updateBehaviorDescription('partner-behavior-type', 'partner-behavior-description');
+            });
+        });
+        
+        // Update behavior description based on selection
+        function updateBehaviorDescription(selectId, descriptionId) {
+            const behaviorType = document.getElementById(selectId).value;
+            const descriptionElement = document.getElementById(descriptionId);
+            
+            if (behaviorType && behaviorDescriptions[behaviorType]) {
+                descriptionElement.textContent = behaviorDescriptions[behaviorType];
+            } else {
+                descriptionElement.textContent = "Select a behavior to see its description";
+            }
+        }
+        
+        // Populate segment selection dropdown
+        function populateSegmentSelect() {
+            const select = document.getElementById('segment-select');
+            select.innerHTML = '<option value="">-- Please select a video segment --</option>';
+            
+            segments.forEach((segment, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = `Segment ${index+1}: Exp ${segment.exp_id}, Rat ${segment.rat_id}, Frames ${segment.start_frame}-${segment.end_frame}, Cluster ${segment.cluster}`;
+                select.appendChild(option);
+            });
+        }
+        
+        // Update segment selection labels, marking annotated segments
+        function updateSegmentSelectLabels() {
+            const select = document.getElementById('segment-select');
+            
+            for (let i = 1; i < select.options.length; i++) {
+                const index = select.options[i].value;
+                const segment = segments[index];
+                const key = `${segment.exp_id}_${segment.rat_id}_${segment.start_frame}_${segment.end_frame}`;
+                
+                if (annotations[key]) {
+                    if (!select.options[i].textContent.includes('(Annotated)')) {
+                        select.options[i].textContent += ' (Annotated)';
+                    }
+                }
+            }
+        }
+        
+        // Load selected segment
+        function loadSelectedSegment() {
+            const selectElement = document.getElementById('segment-select');
+            const selectedIndex = selectElement.value;
+            
+            if (!selectedIndex) {
+                alert('Please select a video segment first');
+                return;
+            }
+            
+            currentSegment = segments[selectedIndex];
+            
+            // Display segment info
+            document.getElementById('segment-info').textContent = 
+                `Exp ${currentSegment.exp_id}, Rat ${currentSegment.rat_id}, Frames ${currentSegment.start_frame}-${currentSegment.end_frame}, Cluster ${currentSegment.cluster}`;
+            
+            // Set rat IDs
+            document.getElementById('focal-rat-id').textContent = currentSegment.rat_id;
+            document.getElementById('partner-rat-id').textContent = currentSegment.partner_id || 'Unknown';
+            
+            // Load videos
+            loadVideos(currentSegment);
+            
+            // Load existing annotation (if any)
+            loadExistingAnnotation(currentSegment);
+            
+            // Show segment view
+            document.getElementById('segment-view').style.display = 'block';
+        }
+        
+        // Load videos
+        function loadVideos(segment) {
+            const videoSection = document.getElementById('video-section');
+            videoSection.innerHTML = '';
+            
+            // Use extracted video clips
+            segment.clips.forEach((clipPath, index) => {
+                const videoContainer = document.createElement('div');
+                videoContainer.className = 'video-container';
+                
+                const videoTitle = document.createElement('h3');
+                videoTitle.textContent = `View ${index + 1}`;
+                
+                const video = document.createElement('video');
+                video.controls = true;
+                
+                // Use extracted clip
+                const clipFilename = clipPath.split('/').pop();
+                video.src = `/clips/${clipFilename}`;
+                
+                videoContainer.appendChild(videoTitle);
+                videoContainer.appendChild(video);
+                videoSection.appendChild(videoContainer);
+            });
+            
+            // If no clips available, show error message
+            if (segment.clips.length === 0) {
+                const errorMsg = document.createElement('div');
+                errorMsg.className = 'error-message';
+                errorMsg.textContent = 'Unable to load video clips. Please check if video files exist.';
+                videoSection.appendChild(errorMsg);
+            }
+        }
+        
+        // Update confidence value display
+        function updateConfidenceValue(sliderId, valueId) {
+            const value = document.getElementById(sliderId).value;
+            document.getElementById(valueId).textContent = value;
+        }
+        
+        // Load existing annotation
+        function loadExistingAnnotation(segment) {
+            const key = `${segment.exp_id}_${segment.rat_id}_${segment.start_frame}_${segment.end_frame}`;
+            const annotation = annotations[key];
+            
+            if (annotation) {
+                // Set social interaction
+                const interactionRadio = document.querySelector(`input[name="interaction"][value="${annotation.has_interaction ? '1' : '0'}"]`);
+                if (interactionRadio) {
+                    interactionRadio.checked = true;
+                }
+                
+                // Set confidence values
+                if (annotation.interaction_confidence !== undefined) {
+                    document.getElementById('interaction-confidence').value = annotation.interaction_confidence;
+                    document.getElementById('interaction-confidence-value').textContent = annotation.interaction_confidence;
+                }
+                
+                // Set focal mouse behavior
+                if (annotation.focal_behavior) {
+                    document.getElementById('focal-behavior-type').value = annotation.focal_behavior;
+                    updateBehaviorDescription('focal-behavior-type', 'focal-behavior-description');
+                    document.getElementById('focal-confidence').value = annotation.focal_confidence || 0.8;
+                    document.getElementById('focal-confidence-value').textContent = annotation.focal_confidence || 0.8;
+                }
+                
+                // Set partner mouse behavior
+                if (annotation.partner_behavior) {
+                    document.getElementById('partner-behavior-type').value = annotation.partner_behavior;
+                    updateBehaviorDescription('partner-behavior-type', 'partner-behavior-description');
+                    document.getElementById('partner-confidence').value = annotation.partner_confidence || 0.8;
+                    document.getElementById('partner-confidence-value').textContent = annotation.partner_confidence || 0.8;
+                }
+                
+                // For backward compatibility
+                if (annotation.behavior_type && !annotation.focal_behavior) {
+                    document.getElementById('focal-behavior-type').value = annotation.behavior_type;
+                    updateBehaviorDescription('focal-behavior-type', 'focal-behavior-description');
+                    
+                    if (annotation.behavior_confidence) {
+                        document.getElementById('focal-confidence').value = annotation.behavior_confidence;
+                        document.getElementById('focal-confidence-value').textContent = annotation.behavior_confidence;
+                    }
+                }
+            } else {
+                // Reset form
+                document.querySelector('input[name="interaction"]:checked')?.removeAttribute('checked');
+                document.getElementById('focal-behavior-type').value = '';
+                document.getElementById('partner-behavior-type').value = '';
+                document.getElementById('focal-behavior-description').textContent = 'Select a behavior to see its description';
+                document.getElementById('partner-behavior-description').textContent = 'Select a behavior to see its description';
+                document.getElementById('interaction-confidence').value = 0.8;
+                document.getElementById('interaction-confidence-value').textContent = '0.8';
+                document.getElementById('focal-confidence').value = 0.8;
+                document.getElementById('focal-confidence-value').textContent = '0.8';
+                document.getElementById('partner-confidence').value = 0.8;
+                document.getElementById('partner-confidence-value').textContent = '0.8';
+            }
+        }
+        
+        // Save annotation function
+        function saveAnnotation() {
+            if (!currentSegment) {
+                alert('Please load a video segment first');
+                return;
+            }
+            
+            // Get interaction type
+            const interactionRadio = document.querySelector('input[name="interaction"]:checked');
+            if (!interactionRadio) {
+                alert('Please select whether there is social interaction');
+                return;
+            }
+            
+            const hasInteraction = interactionRadio.value === '1';
+            
+            // Get focal mouse behavior
+            const focalBehavior = document.getElementById('focal-behavior-type').value;
+            if (!focalBehavior) {
+                alert('Please select a behavior for the focal mouse');
+                return;
+            }
+            
+            // Get partner mouse behavior
+            const partnerBehavior = document.getElementById('partner-behavior-type').value;
+            if (hasInteraction && !partnerBehavior) {
+                alert('For social interactions, please select a behavior for the partner mouse');
+                return;
+            }
+            
+            // Get confidence values
+            const interactionConfidence = parseFloat(document.getElementById('interaction-confidence').value);
+            const focalConfidence = parseFloat(document.getElementById('focal-confidence').value);
+            const partnerConfidence = parseFloat(document.getElementById('partner-confidence').value);
+            
+            // Prepare submission data
+            const annotationData = {
+                exp_id: currentSegment.exp_id,
+                rat_id: currentSegment.rat_id,
+                partner_id: currentSegment.partner_id,
+                start_frame: currentSegment.start_frame,
+                end_frame: currentSegment.end_frame,
+                has_interaction: hasInteraction,
+                interaction_confidence: interactionConfidence,
+                focal_behavior: focalBehavior,
+                focal_confidence: focalConfidence,
+                partner_behavior: partnerBehavior,
+                partner_confidence: partnerConfidence,
+                annotation_time: new Date().toISOString()
+            };
+            
+            // Send to server
+            fetch('/save_annotation', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(annotationData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('Annotation saved');
+                    
+                    // Update local annotation data
+                    const key = `${currentSegment.exp_id}_${currentSegment.rat_id}_${currentSegment.start_frame}_${currentSegment.end_frame}`;
+                    annotations[key] = annotationData;
+                    
+                    // Update annotation count
+                    document.getElementById('annotated-count').textContent = Object.keys(annotations).length;
+                    
+                    // Update segment selection dropdown labels
+                    updateSegmentSelectLabels();
+                } else {
+                    alert('Save failed');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error occurred while saving');
+            });
+        }
+    </script>
+</body>
+</html>
