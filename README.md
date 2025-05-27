@@ -66,7 +66,7 @@ The system expects a MAT file with an sdannce structure containing:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/mouse-behavior-annotation.git
+   git clone https://github.com/DavidDING21/mouse_behavior_annotation.git
    cd mouse-behavior-annotation
    ```
 
@@ -170,6 +170,6 @@ If you use this annotation system in your research, please cite:
   author = {Honghe Ding},
   title = {Mouse Behavior Annotation System},
   year = {2025},
-  url = {https://github.com/yourusername/mouse-behavior-annotation}
+  url = {https://github.com/DavidDING21/mouse_behavior_annotation.git}
 }
 ```
